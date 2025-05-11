@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Test Mapbox</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<script src='https://api.mapbox.com/mapbox-gl-js/v3.11.0/mapbox-gl.js'></script>
+<link href='https://api.mapbox.com/mapbox-gl-js/v3.11.0/mapbox-gl.css' rel='stylesheet' />
+<style>
+body { margin: 0; padding: 0; }
+#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+</style>
+</head>
+<body>
+    <style>
+        .mapboxgl-popup {
+            max-width: 400px;
+            font:
+                12px/20px 'Helvetica Neue',
+                Arial,
+                Helvetica,
+                sans-serif;
+        }
+    </style>
+    <div id='map'></div>
+    <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiYmFvaGFubmd1eWVuIiwiYSI6ImNtOXd6dmw2ODB3ejEya3NlYzE0dmYxbncifQ.m3GGPlpqZngR-GpQS6TvDA';
+    const map = new mapboxgl.Map({
+        container: 'map', // container ID
+        style: "mapbox://styles/baohannguyen/cma2gfok400ud01s0hg5ve4rg", // style URL
+        center: [10, 49], // starting position [lng, lat]
+        zoom: 9, // starting zoom
+    });
+    // Speech pop up
+   const popup = new mapboxgl.Popup({ closeOnClick: false })
+        .setLngLat([9.182707, 48.775939])
+        .setHTML('<h1>Hello World!</h1>')
+        .addTo(map);
+    
+    
+    </script>
+
+</body>
+</html>
