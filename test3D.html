@@ -1,147 +1,422 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta charset="utf-8">
-<title>Add a 3D model</title>
-<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.12.0/mapbox-gl.css" rel="stylesheet">
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.12.0/mapbox-gl.js"></script>
-<style>
-body { margin: 0; padding: 0; }
-#map { position: absolute; top: 0; bottom: 0; width: 100%; }
-</style>
+    <meta charset="utf-8">
+    <title>Prototype Mapbox</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.12.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.12.0/mapbox-gl.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+        .mapboxgl-popup {
+            max-width: 400px;
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            pointer-events: none;
+            /* verhindert, dass der Popup Eingaben blockiert */
+        }
+    </style>
+    <style>
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+        .floating-popup {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            max-width: 300px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 6px;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            z-index: 10;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+    </style>
+
+    <div id="map"></div>
+    <div id="hover-popup" class="floating-popup"></div>
 </head>
-<style>
-    .mapboxgl-popup {
-        max-width: 400px;
-        font:
-            12px/20px 'Helvetica Neue', Arial, elvetica, sans-serif;
-    }
-</style>
+
 <body>
-<script src="https://unpkg.com/three@0.126.0/build/three.min.js"></script>
-<script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
-<div id="map"></div>
-<script>
-	mapboxgl.accessToken = 'pk.eyJ1IjoiYmFvaGFubmd1eWVuIiwiYSI6ImNtOXd6dmw2ODB3ejEya3NlYzE0dmYxbncifQ.m3GGPlpqZngR-GpQS6TvDA';
-    const map = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/baohannguyen/cma2gfok400ud01s0hg5ve4rg',
-        zoom: 19,
-        center: [9.18297, 48.775656],
-        pitch: 60,
-        antialias: true // create the gl context with MSAA antialiasing, so custom layers are antialiased
-    });
-     const popup = new mapboxgl.Popup({ closeOnClick: false })
-        .setLngLat([9.182546, 48.776609])
-        .setHTML('<h1>Hello World!</h1>')
-        .addTo(map);
+    <script src="https://unpkg.com/three@0.126.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYmFvaGFubmd1eWVuIiwiYSI6ImNtOXd6dmw2ODB3ejEya3NlYzE0dmYxbncifQ.m3GGPlpqZngR-GpQS6TvDA';
 
-    // parameters to ensure the model is georeferenced correctly on the map
-    const modelOrigin = [ 9.18297, 48.775656];
-    const modelAltitude = 0;
-    const modelRotate = [Math.PI / 2, 2, 0];
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/baohannguyen/cma2gfok400ud01s0hg5ve4rg',
+            zoom: 19,
+            center: [9.18297, 48.775656],
+            pitch: 60,
+            antialias: true
+        });
 
-    const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(
-        modelOrigin,
-        modelAltitude
-    );
+        const popup = new mapboxgl.Popup({ closeOnClick: false })
+            .setLngLat([9.185534, 48.780003])
+            .setHTML('<h1>Hello World</h1>')
+            .addTo(map);
 
-    // transformation parameters to position, rotate and scale the 3D model onto the map
-    const modelTransform = {
-        translateX: modelAsMercatorCoordinate.x,
-        translateY: modelAsMercatorCoordinate.y,
-        translateZ: modelAsMercatorCoordinate.z,
-        rotateX: modelRotate[0],
-        rotateY: modelRotate[1],
-        rotateZ: modelRotate[2],
-        /* Since the 3D model is in real world meters, a scale transform needs to be
-         * applied since the CustomLayerInterface expects units in MercatorCoordinates.
-         */
-        scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * 0.2
-    };
+        map.on('load', () => {
+            const hoverPopup = document.getElementById('hover-popup');
 
-    const THREE = window.THREE;
-
-    // configuration of the custom layer for a 3D model per the CustomLayerInterface
-    const customLayer = {
-        id: '3d-model',
-        type: 'custom',
-        renderingMode: '3d',
-        onAdd: function (map, gl) {
-            this.camera = new THREE.Camera();
-            this.scene = new THREE.Scene();
-
-            // create two three.js lights to illuminate the model
-            const directionalLight = new THREE.DirectionalLight(0xffffff);
-            directionalLight.position.set(0, -70, 100).normalize();
-            this.scene.add(directionalLight);
-
-            const directionalLight2 = new THREE.DirectionalLight(0xffffff);
-            directionalLight2.position.set(0, 70, 100).normalize();
-            this.scene.add(directionalLight2);
-
-            // use the three.js GLTF loader to add the 3D model to the three.js scene
-            const loader = new THREE.GLTFLoader();
-            loader.load('./train.gltf',
-                (gltf) => {
-                    this.scene.add(gltf.scene);
-                }
-            );
-            this.map = map;
-
-            // use the Mapbox GL JS map canvas for three.js
-            this.renderer = new THREE.WebGLRenderer({
-                canvas: map.getCanvas(),
-                context: gl,
-                antialias: true
+            // Beim Hover zeigen wir den Text in der festen Box
+            map.on('mouseenter', 'places', (e) => {
+                map.getCanvas().style.cursor = 'pointer';
+                hoverPopup.style.display = 'block';
+                hoverPopup.innerHTML = e.features[0].properties.description;
             });
 
-            this.renderer.autoClear = false;
-        },
-        render: function (gl, matrix) {
-            const rotationX = new THREE.Matrix4().makeRotationAxis(
-                new THREE.Vector3(1, 0, 0),
-                modelTransform.rotateX
-            );
-            const rotationY = new THREE.Matrix4().makeRotationAxis(
-                new THREE.Vector3(0, 1, 0),
-                modelTransform.rotateY
-            );
-            const rotationZ = new THREE.Matrix4().makeRotationAxis(
-                new THREE.Vector3(0, 0, 1),
-                modelTransform.rotateZ
+            // Wenn Maus den Marker verlässt, verstecken wir es wieder
+            map.on('mouseleave', 'places', () => {
+                map.getCanvas().style.cursor = '';
+                hoverPopup.style.display = 'none';
+            });
+
+            map.addSource('places', {
+                type: 'geojson', data: {
+                    type: 'FeatureCollection', features: [{
+                        type: 'Feature',
+                        properties: {
+                            description: '<strong>Warnung</strong><p>Störung an Bahn 10 am Bahnhof ...</p>'
+                        },
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [9.18737, 48.781251]
+                        }
+                    }]
+                }
+            });
+
+            map.addLayer({
+                'id': 'places', 'type': 'circle', 'source': 'places',
+                'paint': {
+                    'circle-color': '#FF6D2D',
+                    'circle-radius': 6,
+                    'circle-stroke-width': 2,
+                    'circle-stroke-color': '#ffffff'
+                }
+            });
+
+            // pop up through click
+            const popup = new mapboxgl.Popup({
+                closeButton: true,
+                closeOnClick: true
+            });
+
+            map.on('click', 'places', (e) => {
+                const coordinates = e.features[0].geometry.coordinates.slice();
+                const description = e.features[0].properties.description;
+                popup.setLngLat(coordinates).setHTML(description).addTo(map);
+            });
+            // green line
+            map.addSource('route', {'type': 'geojson', 'data': {
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': [
+                            [9.179280979861318, 48.78231939470328],
+                            [9.17947457944652, 48.78253532242147],
+                            [9.179775181082192, 48.78285778780665],
+                            [
+                                9.180166592323928,
+                                48.7833105353468
+                            ],
+                            [
+                                9.180475756609496,
+                                48.78336322937258
+                            ],
+                            [
+                                9.181297501450189,
+                                48.78302868103552
+                            ],
+                            [
+                                9.182277935690394,
+                                48.78267280039972
+                            ]
+                        ]
+                    }
+                }
+            });
+            map.addLayer({
+                'id': 'route',
+                'type': 'line',
+                'source': 'route',
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': '#5CE65C',
+                    'line-width': 10
+                }
+            });
+            // dotted line
+            map.loadImage(
+                'https://docs.mapbox.com/mapbox-gl-js/assets/pattern-dot.png',
+                (error, image) => {
+                    if (error) throw error;
+
+                    map.addImage('pattern-dot', image);
+
+                    map.addSource('route-data', {
+                        type: 'geojson',
+                        lineMetrics: true,
+                        data: {
+                            'type': 'Feature',
+                            'properties': {},
+                            'geometry': {
+                                'coordinates': [
+                                    [
+                                        9.177120036707663,
+                                        48.780258577279255
+                                    ],
+                                    [
+                                        9.177537398768493,
+                                        48.78012444079894
+                                    ],
+                                    [
+                                        9.178061270003695,
+                                        48.779915422552705
+                                    ],
+                                    [
+                                        9.178357237433943,
+                                        48.77981521933998
+                                    ],
+                                    [
+                                        9.178706383034239,
+                                        48.77968268088725
+                                    ],
+                                    [
+                                        9.179167502920848,
+                                        48.779524316686945
+                                    ],
+                                    [
+                                        9.180319920551995,
+                                        48.77915393354783
+                                    ],
+                                    [
+                                        9.180575284290029,
+                                        48.77948852961654
+                                    ],
+                                    [
+                                        9.180613711374775,
+                                        48.77961337464254
+                                    ],
+                                    [
+                                        9.180772921753402,
+                                        48.77974513192211
+                                    ],
+                                    [
+                                        9.18106109462994,
+                                        48.78016572321556
+                                    ]
+                                ],
+                                'type': 'LineString'
+                            }
+                        }
+                    });
+
+                    const lineBaseWidth = 14;
+
+                    map.addLayer({
+                        id: 'route-line',
+                        type: 'line',
+                        source: 'route-data',
+                        layout: {
+                            'line-join': 'none'
+                        },
+                        paint: {
+                            'line-pattern': 'pattern-dot',
+                            'line-width': [
+                                'interpolate',
+                                ['exponential', 2],
+                                ['zoom'],
+                                0,
+                                lineBaseWidth * 1,
+                                0.9999,
+                                lineBaseWidth * 2,
+                                1,
+                                lineBaseWidth * 1,
+                                1.9999,
+                                lineBaseWidth * 2,
+                                2,
+                                lineBaseWidth * 1,
+                                2.9999,
+                                lineBaseWidth * 2,
+                                3,
+                                lineBaseWidth * 1,
+                                3.9999,
+                                lineBaseWidth * 2,
+                                4,
+                                lineBaseWidth * 1,
+                                4.9999,
+                                lineBaseWidth * 2,
+                                5,
+                                lineBaseWidth * 1,
+                                5.9999,
+                                lineBaseWidth * 2,
+                                6,
+                                lineBaseWidth * 1,
+                                6.9999,
+                                lineBaseWidth * 2,
+                                7,
+                                lineBaseWidth * 1,
+                                7.9999,
+                                lineBaseWidth * 2,
+                                8,
+                                lineBaseWidth * 1,
+                                8.9999,
+                                lineBaseWidth * 2,
+                                9,
+                                lineBaseWidth * 1,
+                                9.9999,
+                                lineBaseWidth * 2,
+                                10,
+                                lineBaseWidth * 1,
+                                10.9999,
+                                lineBaseWidth * 2,
+                                11,
+                                lineBaseWidth * 1,
+                                11.9999,
+                                lineBaseWidth * 2,
+                                12,
+                                lineBaseWidth * 1,
+                                12.9999,
+                                lineBaseWidth * 2,
+                                13,
+                                lineBaseWidth * 1,
+                                13.9999,
+                                lineBaseWidth * 2,
+                                14,
+                                lineBaseWidth * 1,
+                                14.9999,
+                                lineBaseWidth * 2,
+                                15,
+                                lineBaseWidth * 1,
+                                15.9999,
+                                lineBaseWidth * 2,
+                                16,
+                                lineBaseWidth * 1,
+                                16.9999,
+                                lineBaseWidth * 2,
+                                17,
+                                lineBaseWidth * 1,
+                                17.9999,
+                                lineBaseWidth * 2,
+                                18,
+                                lineBaseWidth * 1,
+                                18.9999,
+                                lineBaseWidth * 2,
+                                19,
+                                lineBaseWidth * 1,
+                                19.9999,
+                                lineBaseWidth * 2,
+                                20,
+                                lineBaseWidth * 1,
+                                20.9999,
+                                lineBaseWidth * 2,
+                                21,
+                                lineBaseWidth * 1,
+                                22,
+                                lineBaseWidth * 2
+                            ]
+                        }
+                    });
+                }
             );
 
-            const m = new THREE.Matrix4().fromArray(matrix);
-            const l = new THREE.Matrix4()
-                .makeTranslation(
-                    modelTransform.translateX,
-                    modelTransform.translateY,
-                    modelTransform.translateZ
-                )
-                .scale(
-                    new THREE.Vector3(
+            // 3D-Model
+            const modelOrigin = [9.18297, 48.775656];
+            const modelAltitude = 0;
+            const modelRotate = [Math.PI / 2, 0.5, 0];
+
+            const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude);
+            const modelTransform = {
+                translateX: modelAsMercatorCoordinate.x,
+                translateY: modelAsMercatorCoordinate.y,
+                translateZ: modelAsMercatorCoordinate.z,
+                rotateX: modelRotate[0],
+                rotateY: modelRotate[1],
+                rotateZ: modelRotate[2],
+                scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * 5
+            };
+
+            const THREE = window.THREE;
+
+            const customLayer = {
+                id: '3d-model',
+                type: 'custom',
+                renderingMode: '3d',
+                onAdd: function (map, gl) {
+                    this.camera = new THREE.Camera();
+                    this.scene = new THREE.Scene();
+
+                    // const light1 = new THREE.DirectionalLight(0xffffff);
+                    // light1.position.set(0, -10, 100).normalize();
+                    // this.scene.add(light1);
+
+                    const light2 = new THREE.DirectionalLight(0xffffff);
+                    light2.position.set(0, 100, 100).normalize();
+                    this.scene.add(light2);
+
+                    // load 3D-Model
+                    const loader = new THREE.GLTFLoader();
+                    loader.load('./trainTest_3.gltf', (gltf) => {
+                        this.scene.add(gltf.scene);
+                    });
+
+                    this.map = map;
+                    this.renderer = new THREE.WebGLRenderer({
+                        canvas: map.getCanvas(),
+                        context: gl,
+                        antialias: true
+                    });
+                    this.renderer.autoClear = false;
+                },
+                render: function (gl, matrix) {
+                    const rotationX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), modelTransform.rotateX);
+                    const rotationY = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 1, 0), modelTransform.rotateY);
+                    const rotationZ = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 0, 1), modelTransform.rotateZ);
+
+                    const m = new THREE.Matrix4().fromArray(matrix);
+                    const l = new THREE.Matrix4().makeTranslation(
+                        modelTransform.translateX,
+                        modelTransform.translateY,
+                        modelTransform.translateZ
+                    ).scale(new THREE.Vector3(
                         modelTransform.scale,
                         -modelTransform.scale,
                         modelTransform.scale
-                    )
-                )
-                .multiply(rotationX)
-                .multiply(rotationY)
-                .multiply(rotationZ);
+                    )).multiply(rotationX).multiply(rotationY).multiply(rotationZ);
 
-            this.camera.projectionMatrix = m.multiply(l);
-            this.renderer.resetState();
-            this.renderer.render(this.scene, this.camera);
-            this.map.triggerRepaint();
-        }
-    };
+                    this.camera.projectionMatrix = m.multiply(l);
+                    this.renderer.resetState();
+                    this.renderer.render(this.scene, this.camera);
+                    this.map.triggerRepaint();
+                }
+            };
 
-    map.on('style.load', () => {
-        map.addLayer(customLayer, 'waterway-label');
-    });
-</script>
-
+            // model added last → is at the top
+            map.addLayer(customLayer);
+        });
+    </script>
 </body>
+
 </html>
