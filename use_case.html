@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Prototyp Szenario</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.12.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.12.0/mapbox-gl.js"></script>
+    <script src="threebox.js" type="text/javascript"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .mapboxgl-popup {
+            max-width: 400px;
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            pointer-events: none;
+            /* verhindert, dass der Popup Eingaben blockiert */
+        }
+    </style>
+    <style>
+        .floating-popup {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            max-width: 300px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 6px;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            z-index: 10;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="map"></div>
+    <div id="hover-popup" class="floating-popup"></div>
+
+    <script src="https://unpkg.com/three@0.126.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYmFvaGFubmd1eWVuIiwiYSI6ImNtOXd6dmw2ODB3ejEya3NlYzE0dmYxbncifQ.m3GGPlpqZngR-GpQS6TvDA';
+
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/baohannguyen/cmb5ici4700m801qxcboad39i',
+            zoom: 19,
+            center: [9.186419467032465, 48.78219038609993],
+            pitch: 60,
+            antialias: true
+        });
+
+        map.on('load', () => {
+            const hoverPopup = document.getElementById('hover-popup');
+            const popup = new mapboxgl.Popup({
+                closeButton: true,
+                closeOnClick: true
+            });
+
+            // pop up messages
+            const incidents = [
+                {
+                    id: 'incident-0',
+                    color: '#e50000',
+                    coordinates: [9.186341750042487, 48.78202756466163],
+                    hoverText: '<strong>Aktuelle Störungen</strong><table><tr><th>Abfahrt</th><th>Ziel</th><th>Plan</th><th>Aktuell</th></tr><tr><td>Stuttgart</td><td>Vaihingen</td><td>15:30</td><td>Verspätet</td></tr><table>',
+                    clickText: '<strong>Hindernis erkannt!</strong><p>15:02 Uhr: Kuh blockiert die Strecke von ... nach ... (Bahn 104)</p>'
+                },
+                {
+                    id: 'incident-1',
+                    color: '#0074D9',
+                    coordinates: [9.1855, 48.784],
+                    hoverText: '<strong>Störung</strong><p>Technischer Defekt an Weiche 12</p>',
+                    clickText: '<strong>Technischer Defekt</strong><p>15:02 Uhr: Weichenstörung verursacht Verspätung auf Linie 208</p>'
+                },
+                {
+                    id: 'incident-2',
+                    color: '#93c47d',
+                    coordinates: [9.1848, 48.7834],
+                    hoverText: '<strong>Gefahr</strong><p>Starke Windböen</p>',
+                    clickText: '<strong>Unwetterwarnung</strong><p>15:45 Uhr: Züge im südlichen Bereich verlangsamt wegen Wind</p>'
+                }
+            ];
+
+            incidents.forEach((incident) => {
+                map.addSource(incident.id, {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: [{
+                            type: 'Feature',
+                            properties: {
+                                hoverText: incident.hoverText,
+                                clickText: incident.clickText
+                            },
+                            geometry: {
+                                type: 'Point',
+                                coordinates: incident.coordinates
+                            }
+                        }]
+                    }
+                });
+
+                map.addLayer({
+                    id: incident.id,
+                    type: 'circle',
+                    source: incident.id,
+                    paint: {
+                        'circle-color': incident.color,
+                        'circle-radius': 6,
+                        'circle-stroke-width': 2,
+                        'circle-stroke-color': '#ffffff'
+                    }
+                });
+
+                map.on('mouseenter', incident.id, (e) => {
+                    map.getCanvas().style.cursor = 'pointer';
+                    hoverPopup.style.display = 'block';
+                    hoverPopup.innerHTML = e.features[0].properties.hoverText;
+                });
+
+                map.on('mouseleave', incident.id, () => {
+                    map.getCanvas().style.cursor = '';
+                    hoverPopup.style.display = 'none';
+                });
+
+                map.on('click', incident.id, (e) => {
+                    const coordinates = e.features[0].geometry.coordinates.slice();
+                    const description = e.features[0].properties.clickText;
+                    popup.setLngLat(coordinates).setHTML(description).addTo(map);
+                });
+            });
+
+            // red line
+            map.addSource('route', {
+                'type': 'geojson', 'data': {
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': [
+                            [
+                                9.186731161888531,
+                                48.78249862226025
+                            ],
+                            [
+                                9.186636694620177,
+                                48.78244374745404
+                            ],
+                            [
+                                9.186553847621923,
+                                48.782388841189686
+                            ],
+                            [
+                                9.186415413281651,
+                                48.78217788256609
+                            ],
+                            [
+                                9.186318892918422,
+                                48.7819798267507
+                            ],
+                            [
+                                9.186284369779798,
+                                48.78184745328625
+                            ],
+                            [
+                                9.186160637409472,
+                                48.78175820008059
+                            ],
+                            [
+                                9.185892942354371,
+                                48.78169000980691
+                            ],
+                            [
+                                9.18539044702905,
+                                48.78179780074916
+                            ]
+
+
+                        ]
+                    }
+                }
+            });
+            map.addLayer({
+                'id': 'route',
+                'type': 'line',
+                'source': 'route',
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': '#e50000',
+                    'line-width': 5
+                }
+            });
+
+            map.addSource('route-1', {
+                'type': 'geojson', 'data': {
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': [
+                            [
+                                9.186283489802179,
+                                48.78184652059022
+                            ],
+                            [
+                                9.18629156838199,
+                                48.78162063024212
+                            ],
+                            [
+                                9.18629522091922,
+                                48.78138979926422
+                            ]
+
+
+                        ]
+                    }
+                }
+            });
+            map.addLayer({
+                'id': 'route-1',
+                'type': 'line',
+                'source': 'route-1',
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': '#e50000',
+                    'line-width': 5
+                }
+            });
+
+
+            // 3D-Model
+            const modelOrigin = [9.18650701209529, 48.782319358876634];
+            const modelAltitude = 0;
+            const modelRotate = [Math.PI / 2, -0.5, 0];
+
+            const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude);
+            const modelTransform = {
+                translateX: modelAsMercatorCoordinate.x,
+                translateY: modelAsMercatorCoordinate.y,
+                translateZ: modelAsMercatorCoordinate.z,
+                rotateX: modelRotate[0],
+                rotateY: modelRotate[1],
+                rotateZ: modelRotate[2],
+                scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * 5
+            };
+
+            const THREE = window.THREE;
+
+            const customLayer = {
+                id: '3d-model',
+                type: 'custom',
+                renderingMode: '3d',
+                onAdd: function (map, gl) {
+                    this.camera = new THREE.Camera();
+                    this.scene = new THREE.Scene();
+
+                    //light settings
+
+                    // const light1 = new THREE.DirectionalLight(0xffffff);
+                    // light1.position.set(0, -10, 100).normalize();
+                    // this.scene.add(light1);
+
+                    // const light2 = new THREE.DirectionalLight(0xffffff);
+                    // light2.position.set(150, 150, 150).normalize();
+                    // this.scene.add(light2);
+
+                    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                    this.scene.add(ambientLight);
+
+                    const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1.0);
+                    directionalLight1.position.set(100, 100, 200).normalize();
+                    this.scene.add(directionalLight1);
+
+                    const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.6);
+                    directionalLight2.position.set(-100, -50, 50).normalize();
+                    this.scene.add(directionalLight2);
+
+                    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
+                    hemiLight.position.set(0, 200, 0);
+                    this.scene.add(hemiLight);
+
+
+                    // load 3D-Model
+
+                    // load 3D-Model
+                    const loader = new THREE.GLTFLoader();
+                    loader.load('./trainTest_3.gltf', (gltf) => {
+                        this.scene.add(gltf.scene);
+                    });
+
+
+                    // Liste von Modellen mit Position, Rotation, Skalierung, Pfad
+                    // const models = [
+                    //     {
+                    //         url: './trainTest_3.gltf',
+                    //         lngLat: [9.18650701209529, 48.782319358876634],
+                    //         rotation: [Math.PI / 2, -0.5, 0],
+                    //         scale: 5
+                    //     },
+                    //     {
+                    //         url: './trainTest_3.gltf',
+                    //         lngLat: [9.185975600733912, 48.78171291493297],
+                    //         rotation: [Math.PI / 2, 0, 0],
+                    //         scale: 3
+                    //     },
+                    // ];
+
+                    // models.forEach((modelConfig) => {
+                    //     const mercator = mapboxgl.MercatorCoordinate.fromLngLat(modelConfig.lngLat, 0);
+                    //     const scale = mercator.meterInMercatorCoordinateUnits() * modelConfig.scale;
+
+                    //     loader.load(modelConfig.url, (gltf) => {
+                    //         const model = gltf.scene;
+
+                    //         model.scale.set(scale, scale, scale);
+                    //         model.rotation.set(...modelConfig.rotation);
+                    //         model.position.set(mercator.x, mercator.y, mercator.z);
+
+                    //         this.scene.add(model);
+                    //     });
+                    // });
+
+
+                    this.map = map;
+                    this.renderer = new THREE.WebGLRenderer({
+                        canvas: map.getCanvas(),
+                        context: gl,
+                        antialias: true
+                    });
+                    this.renderer.autoClear = false;
+                },
+                render: function (gl, matrix) {
+                    const rotationX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), modelTransform.rotateX);
+                    const rotationY = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 1, 0), modelTransform.rotateY);
+                    const rotationZ = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 0, 1), modelTransform.rotateZ);
+
+                    const m = new THREE.Matrix4().fromArray(matrix);
+                    const l = new THREE.Matrix4().makeTranslation(
+                        modelTransform.translateX,
+                        modelTransform.translateY,
+                        modelTransform.translateZ
+                    ).scale(new THREE.Vector3(
+                        modelTransform.scale,
+                        -modelTransform.scale,
+                        modelTransform.scale
+                    )).multiply(rotationX).multiply(rotationY).multiply(rotationZ);
+
+                    this.camera.projectionMatrix = m.multiply(l);
+                    this.renderer.resetState();
+                    this.renderer.render(this.scene, this.camera);
+                    this.map.triggerRepaint();
+                }
+
+            };
+
+            // model added last → is at the top
+            map.addLayer(customLayer);
+        });
+    </script>
+</body>
+
+</html>

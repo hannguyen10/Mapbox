@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Prototyp Störung</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.12.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.12.0/mapbox-gl.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        #hover-popup {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #fff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            pointer-events: none;
+            z-index: 1000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            color: #333;
+            max-width: 320px;
+            line-height: 1.4;
+        }
+
+        /* Überschrift im Popup */
+        #hover-popup strong {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #e50000;
+        }
+
+        /* Tabelle im Popup */
+        #hover-popup table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        #hover-popup th,
+        #hover-popup td {
+            padding: 6px 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #hover-popup th {
+            background-color: #f9f9f9;
+            font-weight: 600;
+            color: #555;
+        }
+
+        /* Zeilen beim Hover etwas hervorheben */
+        #hover-popup tr:hover {
+            background-color: #ffe5e5;
+        }
+
+        .control-buttons {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        button {
+            background-color: #e50000;
+            color: white;
+            padding: 10px 15px;
+            font-size: 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #b30000;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="hover-popup" style="
+    display: none;
+    position: absolute;
+    background-color: white;
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    pointer-events: none;
+    z-index: 1000;
+    font-size: 13px;
+    max-width: 250px;"></div>
+
+    <div id="map"></div>
+
+
+    <div class="control-buttons">
+        <button id="trigger-btn">Szenario starten</button>
+        <button id="popup-toggle-btn" style="display: none;">Warnung ein-/ausblenden</button>
+    </div>
+
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYmFvaGFubmd1eWVuIiwiYSI6ImNtOXd6dmw2ODB3ejEya3NlYzE0dmYxbncifQ.m3GGPlpqZngR-GpQS6TvDA';
+
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/baohannguyen/cmb5ici4700m801qxcboad39i',
+            zoom: 19,
+            center: [9.186419467032465, 48.78219038609993],
+            pitch: 60,
+            antialias: true
+        });
+
+
+
+
+        const incident = {
+            id: 'incident-0',
+            color: '#ff9d37',
+            coordinates: [9.186341750042487, 48.78202756466163],
+            hoverText: '<strong>Aktuelle Störungen</strong><table><tr><th>Abfahrt</th><th>Ziel</th><th>Plan</th><th>Aktuell</th></tr><tr><td>Stuttgart</td><td>Vaihingen</td><td>15:30</td><td>Verspätet</td></tr></table>',
+            clickText: '<strong>Hindernis erkannt!</strong><p>15:02 Uhr: Kuh blockiert die Strecke von ... nach ... (Bahn 104)</p>'
+        };
+
+        const popup = new mapboxgl.Popup({
+            closeButton: true,
+            closeOnClick: false
+        });
+
+        let popupVisible = false;
+
+        function showScenario() {
+            // 1. Marker hinzufügen
+            map.addSource(incident.id, {
+                type: 'geojson',
+                data: {
+                    type: 'FeatureCollection',
+                    features: [{
+                        type: 'Feature',
+                        properties: {
+                            hoverText: incident.hoverText,
+                            clickText: incident.clickText
+                        },
+                        geometry: {
+                            type: 'Point',
+                            coordinates: incident.coordinates
+                        }
+                    }]
+                }
+            });
+
+            map.addLayer({
+                id: incident.id,
+                type: 'circle',
+                source: incident.id,
+                paint: {
+                    'circle-color': incident.color,
+                    'circle-radius': 6,
+                    'circle-stroke-width': 2,
+                    'circle-stroke-color': '#ffffff'
+                }
+            });
+
+            map.on('mouseenter', incident.id, (e) => {
+                map.getCanvas().style.cursor = 'pointer';
+                const hoverPopupEl = document.getElementById('hover-popup');
+                hoverPopupEl.innerHTML = e.features[0].properties.hoverText;
+                hoverPopupEl.style.display = 'block';
+            });
+
+            map.on('mousemove', incident.id, (e) => {
+                const hoverPopupEl = document.getElementById('hover-popup');
+
+            });
+
+            map.on('mouseleave', incident.id, () => {
+                map.getCanvas().style.cursor = '';
+                const hoverPopupEl = document.getElementById('hover-popup');
+                hoverPopupEl.style.display = 'none';
+            });
+
+            // Popup sofort anzeigen
+            popup.setLngLat(incident.coordinates)
+                .setHTML(incident.clickText)
+                .addTo(map);
+            popupVisible = true;
+
+            // Popup-Toggle-Button sichtbar machen
+            document.getElementById("popup-toggle-btn").style.display = "block";
+
+            // Nach 3 Sekunden rote Linie anzeigen
+            setTimeout(() => {
+                map.addSource('route', {
+                    'type': 'geojson',
+                    'data': {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'LineString',
+                            'coordinates': [
+                                [9.186731161888531, 48.78249862226025],
+                                [9.186636694620177, 48.78244374745404],
+                                [9.186553847621923, 48.782388841189686],
+                                [9.186415413281651, 48.78217788256609],
+                                [9.186318892918422, 48.7819798267507],
+                                [9.186284369779798, 48.78184745328625],
+                                [9.186160637409472, 48.78175820008059],
+                                [9.185892942354371, 48.78169000980691],
+                                [9.18539044702905, 48.78179780074916]
+                            ]
+                        }
+                    }
+                });
+
+                map.addLayer({
+                    'id': 'route',
+                    'type': 'line',
+                    'source': 'route',
+                    'layout': {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    'paint': {
+                        'line-color': '#e50000',
+                        'line-width': 5
+                    }
+                });
+                map.addSource('route-1', {
+                    'type': 'geojson',
+                    'data': {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'LineString',
+                            'coordinates': [
+                                [
+                                    9.186283489802179,
+                                    48.78184652059022
+                                ],
+                                [
+                                    9.18629156838199,
+                                    48.78162063024212
+                                ],
+                                [
+                                    9.18629522091922,
+                                    48.78138979926422
+                                ]
+                            ]
+                        }
+                    }
+                });
+
+                map.addLayer({
+                    'id': 'route-1',
+                    'type': 'line',
+                    'source': 'route-1',
+                    'layout': {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    'paint': {
+                        'line-color': '#e50000',
+                        'line-width': 5
+                    }
+                });
+            }, 2500);
+
+            document.getElementById("trigger-btn").style.display = "none";
+        }
+
+        // Popup-Toggle-Funktion
+        function togglePopup() {
+            if (popupVisible) {
+                popup.remove();
+                popupVisible = false;
+            } else {
+                popup.setLngLat(incident.coordinates)
+                    .setHTML(incident.clickText)
+                    .addTo(map);
+                popupVisible = true;
+            }
+        }
+
+        document.getElementById("trigger-btn").addEventListener("click", showScenario);
+        document.getElementById("popup-toggle-btn").addEventListener("click", togglePopup);
+    </script>
+</body>
+
+</html>

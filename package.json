@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "mapbox-gl": "^3.11.1"
+    "mapbox-gl": "^3.11.1",
+    "threebox-plugin": "^2.2.7"
   }
 }

@@ -12,12 +12,14 @@
             margin: 0;
             padding: 0;
         }
+
         #map {
             position: absolute;
             top: 0;
             bottom: 0;
             width: 100%;
         }
+
         .mapboxgl-popup {
             max-width: 400px;
             font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
@@ -32,6 +34,7 @@
             bottom: 0;
             width: 100%;
         }
+
         .floating-popup {
             position: absolute;
             top: 20px;
@@ -125,7 +128,8 @@
                 popup.setLngLat(coordinates).setHTML(description).addTo(map);
             });
             // green line
-            map.addSource('route', {'type': 'geojson', 'data': {
+            map.addSource('route', {
+                'type': 'geojson', 'data': {
                     'type': 'Feature',
                     'properties': {},
                     'geometry': {
@@ -368,13 +372,34 @@
                     this.camera = new THREE.Camera();
                     this.scene = new THREE.Scene();
 
+                    //light settings
+
                     // const light1 = new THREE.DirectionalLight(0xffffff);
                     // light1.position.set(0, -10, 100).normalize();
                     // this.scene.add(light1);
 
-                    const light2 = new THREE.DirectionalLight(0xffffff);
-                    light2.position.set(0, 100, 100).normalize();
-                    this.scene.add(light2);
+                    // const light2 = new THREE.DirectionalLight(0xffffff);
+                    // light2.position.set(150, 150, 150).normalize();
+                    // this.scene.add(light2);
+
+                    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                    this.scene.add(ambientLight);
+
+                    const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1.0);
+                    directionalLight1.position.set(100, 100, 200).normalize();
+                    this.scene.add(directionalLight1);
+
+                    const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.6);
+                    directionalLight2.position.set(-100, -50, 50).normalize();
+                    this.scene.add(directionalLight2);
+
+                    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
+                    hemiLight.position.set(0, 200, 0);
+                    this.scene.add(hemiLight);
+
+
+
+
 
                     // load 3D-Model
                     const loader = new THREE.GLTFLoader();
