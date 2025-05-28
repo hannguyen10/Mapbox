@@ -111,6 +111,7 @@
     font-size: 13px;
     max-width: 250px;"></div>
 
+
     <div id="map"></div>
 
 
@@ -118,6 +119,8 @@
         <button id="trigger-btn">Szenario starten</button>
         <button id="popup-toggle-btn" style="display: none;">Warnung ein-/ausblenden</button>
     </div>
+    <script src="https://unpkg.com/three@0.126.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
 
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoiYmFvaGFubmd1eWVuIiwiYSI6ImNtOXd6dmw2ODB3ejEya3NlYzE0dmYxbncifQ.m3GGPlpqZngR-GpQS6TvDA';
@@ -130,8 +133,6 @@
             pitch: 60,
             antialias: true
         });
-
-
 
 
         const incident = {
@@ -281,7 +282,7 @@
                         'line-width': 5
                     }
                 });
-            }, 2500);
+            }, 3000);
 
             document.getElementById("trigger-btn").style.display = "none";
         }
@@ -301,6 +302,136 @@
 
         document.getElementById("trigger-btn").addEventListener("click", showScenario);
         document.getElementById("popup-toggle-btn").addEventListener("click", togglePopup);
+
+        const modelOrigin = [9.18650701209529, 48.782319358876634];
+        const modelAltitude = 0;
+        const modelRotate = [Math.PI / 2, -0.5, 0];
+
+        const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude);
+        const modelTransform = {
+            translateX: modelAsMercatorCoordinate.x,
+            translateY: modelAsMercatorCoordinate.y,
+            translateZ: modelAsMercatorCoordinate.z,
+            rotateX: modelRotate[0],
+            rotateY: modelRotate[1],
+            rotateZ: modelRotate[2],
+            scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * 5
+        };
+
+        const THREE = window.THREE;
+
+        const customLayer = {
+            id: '3d-model',
+            type: 'custom',
+            renderingMode: '3d',
+            onAdd: function (map, gl) {
+                this.camera = new THREE.Camera();
+                this.scene = new THREE.Scene();
+
+                //light settings
+
+                // const light1 = new THREE.DirectionalLight(0xffffff);
+                // light1.position.set(0, -10, 100).normalize();
+                // this.scene.add(light1);
+
+                // const light2 = new THREE.DirectionalLight(0xffffff);
+                // light2.position.set(150, 150, 150).normalize();
+                // this.scene.add(light2);
+
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                this.scene.add(ambientLight);
+
+                const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1.0);
+                directionalLight1.position.set(100, 100, 200).normalize();
+                this.scene.add(directionalLight1);
+
+                const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.6);
+                directionalLight2.position.set(-100, -50, 50).normalize();
+                this.scene.add(directionalLight2);
+
+                const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
+                hemiLight.position.set(0, 200, 0);
+                this.scene.add(hemiLight);
+
+
+                // load 3D-Model
+
+                // load 3D-Model
+                const loader = new THREE.GLTFLoader();
+                loader.load('./trainTest_3.gltf', (gltf) => {
+                    this.scene.add(gltf.scene);
+                });
+
+
+                // Liste von Modellen mit Position, Rotation, Skalierung, Pfad
+                // const models = [
+                //     {
+                //         url: './trainTest_3.gltf',
+                //         lngLat: [9.18650701209529, 48.782319358876634],
+                //         rotation: [Math.PI / 2, -0.5, 0],
+                //         scale: 5
+                //     },
+                //     {
+                //         url: './trainTest_3.gltf',
+                //         lngLat: [9.185975600733912, 48.78171291493297],
+                //         rotation: [Math.PI / 2, 0, 0],
+                //         scale: 3
+                //     },
+                // ];
+
+                // models.forEach((modelConfig) => {
+                //     const mercator = mapboxgl.MercatorCoordinate.fromLngLat(modelConfig.lngLat, 0);
+                //     const scale = mercator.meterInMercatorCoordinateUnits() * modelConfig.scale;
+
+                //     loader.load(modelConfig.url, (gltf) => {
+                //         const model = gltf.scene;
+
+                //         model.scale.set(scale, scale, scale);
+                //         model.rotation.set(...modelConfig.rotation);
+                //         model.position.set(mercator.x, mercator.y, mercator.z);
+
+                //         this.scene.add(model);
+                //     });
+                // });
+
+
+                this.map = map;
+                this.renderer = new THREE.WebGLRenderer({
+                    canvas: map.getCanvas(),
+                    context: gl,
+                    antialias: true
+                });
+                this.renderer.autoClear = false;
+            },
+            render: function (gl, matrix) {
+                const rotationX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), modelTransform.rotateX);
+                const rotationY = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 1, 0), modelTransform.rotateY);
+                const rotationZ = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 0, 1), modelTransform.rotateZ);
+
+                const m = new THREE.Matrix4().fromArray(matrix);
+                const l = new THREE.Matrix4().makeTranslation(
+                    modelTransform.translateX,
+                    modelTransform.translateY,
+                    modelTransform.translateZ
+                ).scale(new THREE.Vector3(
+                    modelTransform.scale,
+                    -modelTransform.scale,
+                    modelTransform.scale
+                )).multiply(rotationX).multiply(rotationY).multiply(rotationZ);
+
+                this.camera.projectionMatrix = m.multiply(l);
+                this.renderer.resetState();
+                this.renderer.render(this.scene, this.camera);
+                this.map.triggerRepaint();
+            }
+
+        };
+
+        // model added last → is at the top
+        map.addLayer(customLayer);
+
+
+
     </script>
 </body>
 
