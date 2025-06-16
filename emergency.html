@@ -99,17 +99,7 @@
 </head>
 
 <body>
-    <div id="hover-popup" style="
-    display: none;
-    position: absolute;
-    background-color: white;
-    padding: 10px;
-    border-radius: 4px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
-    pointer-events: none;
-    z-index: 1000;
-    font-size: 13px;
-    max-width: 250px;"></div>
+    <div id="hover-popup"></div>
 
 
     <div id="map"></div>
@@ -134,12 +124,16 @@
             antialias: true
         });
 
+        map.on('style.load', function () {
+            map.addLayer(customLayer); // sicherer Zeitpunkt
+        });
+
 
         const incident = {
             id: 'incident-0',
             color: '#ff9d37',
             coordinates: [9.186341750042487, 48.78202756466163],
-            hoverText: '<strong>Aktuelle Störungen</strong><table><tr><th>Abfahrt</th><th>Ziel</th><th>Plan</th><th>Aktuell</th></tr><tr><td>Stuttgart</td><td>Vaihingen</td><td>15:30</td><td>Verspätet</td></tr></table>',
+            hoverText: '<strong>Aktuelle Störungen</strong><table><tr><th>Abfahrt</th><th>Ziel</th><th>Plan</th><th>Aktuell</th></tr><tr><td>Stuttgart</td><td>Vaihingen</td><td>15:30</td><td>Verspätet</td></tr><tr><td>Stuttgart</td><td>Göppingen</td><td>16:30</td><td>Verspätet</td></tr></table>',
             clickText: '<strong>Hindernis erkannt!</strong><p>15:02 Uhr: Kuh blockiert die Strecke von ... nach ... (Bahn 104)</p>'
         };
 
@@ -189,10 +183,6 @@
                 hoverPopupEl.style.display = 'block';
             });
 
-            map.on('mousemove', incident.id, (e) => {
-                const hoverPopupEl = document.getElementById('hover-popup');
-
-            });
 
             map.on('mouseleave', incident.id, () => {
                 map.getCanvas().style.cursor = '';
@@ -427,8 +417,7 @@
 
         };
 
-        // model added last → is at the top
-        map.addLayer(customLayer);
+
 
 
 
