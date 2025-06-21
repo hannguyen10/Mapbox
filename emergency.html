@@ -124,9 +124,11 @@
             antialias: true
         });
 
-        map.on('style.load', function () {
+        /*map.on('style.load', function () {
             map.addLayer(customLayer); // sicherer Zeitpunkt
         });
+        */
+
 
 
         const incident = {
@@ -134,7 +136,7 @@
             color: '#ff9d37',
             coordinates: [9.186341750042487, 48.78202756466163],
             hoverText: '<strong>Aktuelle Störungen</strong><table><tr><th>Abfahrt</th><th>Ziel</th><th>Plan</th><th>Aktuell</th></tr><tr><td>Stuttgart</td><td>Vaihingen</td><td>15:30</td><td>Verspätet</td></tr><tr><td>Stuttgart</td><td>Göppingen</td><td>16:30</td><td>Verspätet</td></tr></table>',
-            clickText: '<strong>Hindernis erkannt!</strong><p>15:02 Uhr: Kuh blockiert die Strecke von ... nach ... (Bahn 104)</p>'
+            clickText: '<strong>Achtung: Hindernis erkannt!</strong><img src="cow.png" style="max-width:50%; height:auto; margin-top:14px; margin-bottom:2px; border-radius:6px; display:block; margin-left:auto; margin-right:auto;"><p>15:02 Uhr - Eine Kuh blockiert aktuell die Strecke von ... nach ... (Bahn 104)</p>'
         };
 
         const popup = new mapboxgl.Popup({
@@ -274,7 +276,13 @@
                 });
             }, 3000);
 
+            setTimeout(() => {
+                
+                    map.addLayer(customLayer); // sicherer Zeitpunkt
+                
+            }, 6000)
             document.getElementById("trigger-btn").style.display = "none";
+
         }
 
         // Popup-Toggle-Funktion
