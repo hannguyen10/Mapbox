@@ -124,7 +124,7 @@
             color: '#ff9d37',
             coordinates: [9.186341750042487, 48.78202756466163],
             hoverText: '<strong>Aktuelle Störungen</strong><table><tr><th>Abfahrt</th><th>Ziel</th><th>Plan</th><th>Aktuell</th></tr><tr><td>Stuttgart</td><td>Vaihingen</td><td>15:30</td><td>Verspätet</td></tr><tr><td>Stuttgart</td><td>Göppingen</td><td>16:30</td><td>Verspätet</td></tr></table>',
-            clickText: '<strong>Achtung: Hindernis erkannt!</strong><img src="cow.png" style="max-width:50%; height:auto; margin-top:14px; margin-bottom:2px; border-radius:6px; display:block; margin-left:auto; margin-right:auto;"><p>15:02 Uhr - Eine Kuh blockiert aktuell die Strecke von ... nach ... (Bahn 104)</p>'
+            clickText: '<strong>Achtung: Hindernis erkannt!</strong><img src="cow.png" style="max-width:50%; height:auto; margin-top:14px; margin-bottom:2px; border-radius:6px; display:block; margin-left:auto; margin-right:auto;"><p>15:02 Uhr - Eine Kuh blockiert aktuell die Strecke von Stuttgart nach Vaihingen (Bahn 104)</p>'
         };
 
         const popup = new mapboxgl.Popup({
@@ -273,7 +273,7 @@
                     },
                     'paint': {
                         'line-color': '#e50000',
-                        'line-width': 5
+                        'line-width': 10
                     }
                 });
                 map.addSource('route-1', {
@@ -310,7 +310,7 @@
                     },
                     'paint': {
                         'line-color': '#e50000',
-                        'line-width': 5
+                        'line-width': 10
                     }
                 });
             }, 3000);
@@ -388,7 +388,7 @@
                     },
                     'paint': {
                         'line-color': '#5CE65C',
-                        'line-width': 5
+                        'line-width': 10
                     }
                 });
             }, 9000);
@@ -414,7 +414,7 @@
 
         const modelOrigin = [9.186881174016799, 48.78257211344504];
         const modelAltitude = 0;
-        const modelRotate = [Math.PI / 2, -1, 0];
+        const modelRotate = [Math.PI / 2, -0.8, 0];
 
         const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude);
         const modelTransform = {
@@ -424,7 +424,7 @@
             rotateX: modelRotate[0],
             rotateY: modelRotate[1],
             rotateZ: modelRotate[2],
-            scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * 5
+            scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * 3
         };
 
         const THREE = window.THREE;
@@ -450,11 +450,11 @@
                 const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
                 this.scene.add(ambientLight);
 
-                const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1.0);
+                const directionalLight1 = new THREE.DirectionalLight(0xffffff, 2.0);
                 directionalLight1.position.set(100, 100, 200).normalize();
                 this.scene.add(directionalLight1);
 
-                const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.6);
+                const directionalLight2 = new THREE.DirectionalLight(0xffffff, 1.0);
                 directionalLight2.position.set(-100, -50, 50).normalize();
                 this.scene.add(directionalLight2);
 
@@ -464,10 +464,8 @@
 
 
                 // load 3D-Model
-
-                // load 3D-Model
                 const loader = new THREE.GLTFLoader();
-                loader.load('./trainTest_3.gltf', (gltf) => {
+                loader.load('./ICE.gltf', (gltf) => {
                     this.scene.add(gltf.scene);
                 });
 
