@@ -127,7 +127,7 @@
                 <tr><td>Stuttgart – Rohr – Vaihingen</td><td>30 Min</td><td>Fährt</td></tr>
             </table>
             `,
-            clickText: `<strong>Achtung: Hindernis erkannt!</strong><img src="cow.png" style="max-width:50%; height:auto; margin-top:14px; margin-bottom:2px; border-radius:6px; display:block; margin-left:auto; margin-right:auto;">
+            clickText: `<strong>Achtung: Hindernis erkannt!</strong><img src="cow.png" style="max-width:50%; height:auto; margin-top:10px; margin-bottom:2px; border-radius:6px; display:block; margin-left:auto; margin-right:auto;">
             <p>15:02 Uhr - Eine Kuh blockiert aktuell die Strecke von Stuttgart nach Vaihingen (Bahn 104)</p>`
         };
 
@@ -317,14 +317,14 @@
                         'line-width': 10
                     }
                 });
-            }, 3000);
+            }, 4000);
 
             // 3d model after 6 seconds
             setTimeout(() => {
 
                 map.addLayer(customLayer);
 
-            }, 6000)
+            }, 8000)
 
             // green line after 9 seconds
             setTimeout(() => {
@@ -397,7 +397,7 @@
                         'line-width': 10
                     }
                 });
-            }, 9000);
+            }, 12000);
             document.getElementById("trigger-btn").style.display = "none";
 
         }
