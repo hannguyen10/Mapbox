@@ -26,7 +26,7 @@ body {
             line-height: 1.4;
         }
         /* title in popup */
-        #hover-popup strong {
+        #hover-popup .section-title {
             display: block;
             font-size: 16px;
             margin-bottom: 10px;
@@ -73,4 +73,91 @@ body {
         }
         button:hover {
             background-color: #b30000;
+        }
+
+        .tooltip-container {
+        font-family: sans-serif;
+        font-size: 13px;
+        max-width: 300px;
+        color: #212529;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+
+        .section-title-green {
+            font-size: 15px;
+            font-weight: bold;
+            color: #FF6D2D;
+            display: block;
+            margin-top: 10px;
+        }
+
+        .disruption-section {
+            margin-top: 10px;
+            margin-bottom: 12px;
+        }
+
+        .planned-time {
+            color: gray;
+        }
+
+        .progress-bar-bg {
+            background: #e9ecef;
+            height: 10px;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        .progress-high {
+            background: #e03131;
+        }
+
+        .progress-medium {
+            background: #f08c00;
+        }
+
+        .disruption-level {
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .disruption-level.high {
+            color: #e03131;
+        }
+
+        .disruption-level.medium {
+            color: #f08c00;
+        }
+
+        .routes {
+            padding: 6px 0;
+        }
+
+        .route-item {
+            border-left: 4px solid #FF6D2D;
+            padding-left: 8px;
+            margin-bottom: 6px;
+        }
+
+        .route-title {
+            font-weight: bold;
+        }
+
+        .route-info {
+            font-size: 12px;
+            color: gray;
+        }
+
+        .route-info .status {
+            color: #FF6D2D;
         }
