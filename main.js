@@ -384,7 +384,7 @@ document.getElementById("popup-toggle-btn").addEventListener("click", togglePopu
 // 3d model data
 const modelOrigin = [9.247491585898445, 48.79205266818798];
 const modelAltitude = 0;
-const modelRotate = [Math.PI / 2, -4.2, 0];
+const modelRotate = [Math.PI / 2, -4.3, 0];
 
 const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude);
 const modelTransform = {
@@ -394,7 +394,7 @@ const modelTransform = {
     rotateX: modelRotate[0],
     rotateY: modelRotate[1],
     rotateZ: modelRotate[2],
-    scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * 55
+    scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * 15
 };
 
 const THREE = window.THREE;
