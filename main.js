@@ -1,10 +1,10 @@
 
-
+// Mapbox data
 mapboxgl.accessToken = 'pk.eyJ1IjoiYmFvaGFubmd1eWVuIiwiYSI6ImNtOXd6dmw2ODB3ejEya3NlYzE0dmYxbncifQ.m3GGPlpqZngR-GpQS6TvDA';
 const map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/baohannguyen/cmb5ici4700m801qxcboad39i',
-    zoom: 16,
+    zoom: 15,
     center: [9.262674807614673, 48.79873918881131],
     pitch: 60,
     antialias: true
@@ -40,22 +40,20 @@ const incident = {
 
     <div class="routes">
         <div class="route-item">
-            <div class="route-title">Route: Feuersee</div>
+            <div class="route-title">Route: Untertürkheim</div>
             <div>Stuttgart → Untertürkheim → Waiblingen</div>
             <div class="route-info">Fahrzeit: 25 Min – <span class="status">Fährt</span></div>
         </div>
         <div class="route-item">
-            <div class="route-title">Route: Rohr</div>
+            <div class="route-title">Route: Bad Cannstatt</div>
             <div>Stuttgart → Bad Cannstatt → Waiblingen</div>
             <div class="route-info">Fahrzeit: 30 Min – <span class="status">Fährt</span></div>
         </div>
     </div>
 </div>
-
-
             `
     ,
-    clickText: `<strong>Achtung: Störung erkannt!</strong><img src="images/train.png" style="max-width:50%; height:auto; margin-top:10px; margin-bottom:2px; border-radius:6px; display:block; margin-left:auto; margin-right:auto;">
+    clickText: `<strong>Achtung: Störung erkannt!</strong><img src="images/train.png" style="max-width:50%; height:auto; margin-bottom:2px; border-radius:6px; display:block; margin-left:auto; margin-right:auto;">
             <p>15:02 Uhr - Zugstörung an der Strecke von Stuttgart nach Waiblingen</p>`
 };
 
@@ -121,7 +119,7 @@ function showScenario() {
 
     document.getElementById("popup-toggle-btn").style.display = "block";
 
-    // red line after 3 seconds
+    // red line after 4 seconds
     setTimeout(() => {
         map.addSource('route', {
             'type': 'geojson',
@@ -238,14 +236,14 @@ function showScenario() {
         });
     }, 4000);
 
-    // 3d model after 6 seconds
+    // 3d model after 8 seconds
     setTimeout(() => {
 
         map.addLayer(customLayer);
 
     }, 8000)
 
-    // orange line after 9 seconds
+    // orange line after 12 seconds
     setTimeout(() => {
         map.addSource('route-2', {
             'type': 'geojson',
@@ -382,9 +380,9 @@ document.getElementById("trigger-btn").addEventListener("click", showScenario);
 document.getElementById("popup-toggle-btn").addEventListener("click", togglePopup);
 
 // 3d model data
-const modelOrigin = [9.247491585898445, 48.79205266818798];
+const modelOrigin = [9.256861746400947, 48.79736340691848];
 const modelAltitude = 0;
-const modelRotate = [Math.PI / 2, -4.3, 0];
+const modelRotate = [Math.PI / 2, -4.1, 0];
 
 const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude);
 const modelTransform = {
@@ -394,7 +392,7 @@ const modelTransform = {
     rotateX: modelRotate[0],
     rotateY: modelRotate[1],
     rotateZ: modelRotate[2],
-    scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * 15
+    scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits() * 12
 };
 
 const THREE = window.THREE;
@@ -412,7 +410,7 @@ const customLayer = {
         this.scene.add(ambientLight);
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 2.2);
-        directionalLight.position.set(0, 300, 0); // hoch & seitlich wie Sonne
+        directionalLight.position.set(0, 300, 0);
         this.scene.add(directionalLight);
 
         const hemiLight = new THREE.HemisphereLight(0xffffee, 0x080820, 0.5);
@@ -458,7 +456,7 @@ const customLayer = {
         )).multiply(rotationX).multiply(rotationY).multiply(rotationZ);
 
         this.camera.projectionMatrix = m.multiply(l);
-        this.renderer.resetState(); // ✅ safe jetzt
+        this.renderer.resetState();
         this.renderer.render(this.scene, this.camera);
         this.map.triggerRepaint();
     }
