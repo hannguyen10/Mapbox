@@ -36,7 +36,7 @@ const incident = {
         <div class="disruption-level medium">Verspätung: Mittel</div>
     </div>
 
-    <strong class="section-title-orange>Mögliche Umleitungen</strong>
+    <strong class="section-title-orange">Mögliche Umleitungen</strong>
 
     <div class="routes">
         <div class="route-item">
